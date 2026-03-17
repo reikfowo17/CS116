@@ -46,16 +46,12 @@ from evaluation import weighted_rmse_score
 # Load data
 train_df, test_df = load_data()
 
-# Tạo list các feature cho việc tính toán
-top_features = ["feature_al", "feature_v", "feature_bp", "feature_a", "feature_b", "feature_c"]
-
 # Tiến hành sinh Features (Lag, Rolling, Diff...) 
-# Cơ chế an toàn chống "Data Leakage"
 train_df, test_df = engineer_features(
     train_df, test_df,
-    lag_features=top_features, lags=[1, 2, 3],
-    rolling_features=top_features[:3], windows=[3, 5],
-    diff_features=top_features[:3],
+    lag_features=TOP_LAG_FEATURES, lags=LAG_STEPS,
+    rolling_features=TOP_LAG_FEATURES[:3], windows=ROLLING_WINDOWS,
+    diff_features=TOP_LAG_FEATURES[:3],
 )
 ```
 
