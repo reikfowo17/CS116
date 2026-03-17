@@ -24,7 +24,7 @@ Tạo một Notebook mới trên Kaggle. Trong cell đầu tiên, clone repo nà
 ```python
 # Cell 1: Clone repo
 !rm -rf /kaggle/working/repo
-!git clone https://github.com/hoangducbao/-n-CS116.git /kaggle/working/repo
+!git clone https://github.com/reikfowo17/CS116.git /kaggle/working/repo
 
 import sys
 sys.path.append('/kaggle/working/repo/src')
