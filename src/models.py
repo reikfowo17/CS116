@@ -15,7 +15,6 @@ from features import compute_target_encoding_stats, build_features, get_feature_
 
 def _train_lgb_ensemble(X_fit, y_fit, w_fit, X_val, y_val, w_val,
                         X_all, y_all, w_all, X_test, feats):
-    """Train LightGBM multi-seed ensemble with retrain-on-all."""
     val_pred = np.zeros(len(y_val), dtype=np.float64)
     test_pred = np.zeros(len(X_test), dtype=np.float64)
     best_iters = []
