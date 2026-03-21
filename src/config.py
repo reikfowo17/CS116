@@ -38,9 +38,6 @@ VAL_THRESHOLD = 3500  # ts_index <= 3500 = train, > 3500 = val
 SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11,
          13, 17, 19, 23, 29, 31, 37, 41, 43, 47]
 
-# ── Feature Selection ──
-TOP_N_FEATURES = None  # Disabled (v4.1 showed full features work better)
-
 # ── Clipping ──
 CLIP_Q_LOW = 0.005
 CLIP_Q_HIGH = 0.995
