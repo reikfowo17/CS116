@@ -39,7 +39,7 @@ SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11,
          13, 17, 19, 23, 29, 31, 37, 41, 43, 47]
 
 # ── Feature Selection ──
-TOP_N_FEATURES = {1: 50, 3: 55, 10: 60, 25: 65}
+TOP_N_FEATURES = None  # Disabled (v4.1 showed full features work better)
 
 # ── Clipping ──
 CLIP_Q_LOW = 0.005
@@ -62,3 +62,26 @@ LGBM_BASE_PARAMS = {
     "verbosity":        -1,
     "n_jobs":           -1,
 }
+
+# ── XGBoost Base Params ──
+XGB_BASE_PARAMS = {
+    "objective":        "reg:squarederror",
+    "eval_metric":      "rmse",
+    "learning_rate":    0.02,
+    "max_depth":        7,
+    "min_child_weight": 200,
+    "subsample":        0.75,
+    "colsample_bytree": 0.65,
+    "reg_alpha":        0.1,
+    "reg_lambda":       10.0,
+    "tree_method":      "hist",
+    "verbosity":        0,
+    "n_jobs":           -1,
+}
+
+# ── XGBoost Seeds ──
+XGB_SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11]
+
+# ── Blend Weights ──
+BLEND_W_LGB = 0.60
+BLEND_W_XGB = 0.40
