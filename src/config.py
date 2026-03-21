@@ -1,7 +1,18 @@
 import os
+import subprocess
 
 # ── Environment Detection ──
 IS_KAGGLE = os.path.exists('/kaggle/input')
+
+# GPU Detection
+def _has_gpu():
+    try:
+        result = subprocess.run(['nvidia-smi'], capture_output=True, timeout=5)
+        return result.returncode == 0
+    except Exception:
+        return False
+
+HAS_GPU = _has_gpu()
 
 # ── Data Paths ──
 if IS_KAGGLE:
@@ -71,7 +82,8 @@ XGB_BASE_PARAMS = {
     "colsample_bytree": 0.65,
     "reg_alpha":        0.1,
     "reg_lambda":       10.0,
-    "tree_method":      "hist",
+    "tree_method":      "gpu_hist" if HAS_GPU else "hist",
+    "device":            "cuda" if HAS_GPU else "cpu",
     "verbosity":        0,
     "n_jobs":           -1,
 }
