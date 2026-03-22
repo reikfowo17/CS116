@@ -75,8 +75,8 @@ LGBM_BASE_PARAMS = {
 XGB_BASE_PARAMS = {
     "objective":        "reg:squarederror",
     "eval_metric":      "rmse",
-    "learning_rate":    0.02,
-    "max_depth":        7,
+    "learning_rate":    0.015,
+    "max_depth":        6,
     "min_child_weight": 200,
     "subsample":        0.75,
     "colsample_bytree": 0.65,
@@ -92,5 +92,5 @@ XGB_BASE_PARAMS = {
 XGB_SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11]
 
 # ── Blend Weights ──
-BLEND_W_LGB = 0.60
-BLEND_W_XGB = 0.40
+BLEND_W_LGB = 0.85
+BLEND_W_XGB = 0.15
