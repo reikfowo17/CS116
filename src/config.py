@@ -1,18 +1,7 @@
 import os
-import subprocess
 
 # ── Environment Detection ──
 IS_KAGGLE = os.path.exists('/kaggle/input')
-
-# GPU Detection
-def _has_gpu():
-    try:
-        result = subprocess.run(['nvidia-smi'], capture_output=True, timeout=5)
-        return result.returncode == 0
-    except Exception:
-        return False
-
-HAS_GPU = _has_gpu()
 
 # ── Data Paths ──
 if IS_KAGGLE:
@@ -42,16 +31,18 @@ EXTRA_FEATURES = ["feature_s"]  # optional, check if exists
 LAG_STEPS = [1, 3, 5, 10, 25]
 ROLLING_WINDOWS = [5, 10, 20]
 
-# ── Validation Split ──
-VAL_THRESHOLD = 3500  # ts_index <= 3500 = train, > 3500 = val
+# ── Cross-Validation ──
+N_CV_SPLITS = 5
 
-# ── Multi-Seed Ensemble ──
-SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11,
-         13, 17, 19, 23, 29, 31, 37, 41, 43, 47]
+# ── Seeds per CV fold ──
+CV_LGB_SEEDS = [42, 2024, 12345, 99, 420]
+CV_CAT_SEEDS = [42, 2024, 12345]
 
-# ── Clipping ──
-CLIP_Q_LOW = 0.005
-CLIP_Q_HIGH = 0.995
+# ── Seeds for final retrain-on-all ──
+FINAL_LGB_SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11,
+                   13, 17, 19, 23, 29, 31, 37, 41, 43, 47]
+FINAL_CAT_SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11]
+
 
 # ── LightGBM Base Params ──
 LGBM_BASE_PARAMS = {
@@ -59,38 +50,30 @@ LGBM_BASE_PARAMS = {
     "metric":           "rmse",
     "boosting_type":    "gbdt",
     "learning_rate":    0.015,
-    "num_leaves":       90,
+    "num_leaves":       127,
     "max_depth":        -1,
     "min_child_samples": 200,
-    "feature_fraction": 0.65,
+    "feature_fraction": 0.60,
     "bagging_fraction": 0.75,
     "bagging_freq":     5,
-    "lambda_l1":        0.1,
+    "lambda_l1":        2.0,
     "lambda_l2":        10.0,
+    "extra_trees":      True,
+    "path_smooth":      1.0,
     "verbosity":        -1,
     "n_jobs":           -1,
 }
 
-# ── XGBoost Base Params ──
-XGB_BASE_PARAMS = {
-    "objective":        "reg:squarederror",
-    "eval_metric":      "rmse",
-    "learning_rate":    0.015,
-    "max_depth":        6,
-    "min_child_weight": 200,
-    "subsample":        0.75,
-    "colsample_bytree": 0.65,
-    "reg_alpha":        0.1,
-    "reg_lambda":       10.0,
-    "tree_method":      "hist",
-    "device":            "cuda" if HAS_GPU else "cpu",
-    "verbosity":        0,
-    "n_jobs":           -1,
+# ── CatBoost Base Params ──
+CATBOOST_PARAMS = {
+    "iterations":       3000,
+    "learning_rate":    0.03,
+    "depth":            7,
+    "l2_leaf_reg":      3.0,
+    "verbose":          0,
+    "early_stopping_rounds": 200,
 }
 
-# ── XGBoost Seeds ──
-XGB_SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11]
+# ── CatBoost Seeds ──
+CAT_SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11]
 
-# ── Blend Weights ──
-BLEND_W_LGB = 0.85
-BLEND_W_XGB = 0.15
