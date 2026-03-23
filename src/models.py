@@ -101,9 +101,9 @@ def solve_horizon(horizon):
     print('=' * 70)
 
     # ── 1. Load data ──
-    tr = pd.read_parquet(TRAIN_PATH).query('horizon == @horizon')
+    tr = pd.read_parquet(TRAIN_PATH).query('horizon == @horizon').reset_index(drop=True)
     from config import TEST_PATH
-    te = pd.read_parquet(TEST_PATH).query('horizon == @horizon')
+    te = pd.read_parquet(TEST_PATH).query('horizon == @horizon').reset_index(drop=True)
     print(f'Data: train={len(tr):,}, test={len(te):,}')
 
     # ── 2. TimeSeriesSplit on unique timestamps ──
