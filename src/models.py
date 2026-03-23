@@ -11,8 +11,7 @@ from config import (
     TARGET, WEIGHT, HORIZONS,
     CV_LGB_SEEDS, CV_CAT_SEEDS,
     FINAL_LGB_SEEDS, FINAL_CAT_SEEDS,
-    TRAIN_PATH, N_CV_SPLITS,
-    CLIP_Q_LOW, CLIP_Q_HIGH,
+    TRAIN_PATH, N_CV_SPLITS
 )
 from evaluation import weighted_rmse_score
 from features import compute_target_encoding_stats, build_features, get_feature_columns
