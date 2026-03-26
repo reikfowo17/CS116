@@ -116,12 +116,14 @@ def solve_horizon(horizon):
     elapsed = (time.time() - t0) / 60
     print(f'Horizon {horizon} done in {elapsed:.1f} min')
 
+    test_ids = te_feat['id'].values
+
     del all_feat, te_feat, X_tr, X_va, X_all
     gc.collect()
 
     return {
         'horizon': horizon,
-        'ids': te['id'].values,
+        'ids': test_ids,
         'pred_raw': test_pred,
         'pred_clip': test_pred_clip,
         'val_score_raw': val_score_raw,
