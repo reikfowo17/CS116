@@ -10,7 +10,7 @@
 | 4 | 19/03 | LightGBM v4 (20-seed + retrain-on-all) | Interactions + TargetEnc + CS-norm + Cyclical + Lag/Roll/EWM/Diff/Rank (~170 feats) | H1:0.080, H3:0.140, H10:0.222, H25:0.272 (Agg: 0.2353) | 0.2612 | 20 seeds, retrain-on-all, clipping, L1/L2 reg |
 | 5 | 20/03 | LightGBM v4.1 (+ feature selection) | Top 50-65 features per-horizon (importance-based) | H1:0.078, H3:0.139, H10:0.219, H25:0.275 (Agg: 0.2357) | 0.2566 ❌ | Feature selection giảm score so với v4 |
 | 6 | 25/03 | LGB+CAT v5 (Ridge stacking, 5-fold CV) | V4 feats + time_phase + lifecycle + momentum + roll_min/max + target enc `code`, percentile clip (~150+ feats) | H1:0.047, H3:0.057, H10:0.107, H25:0.135 (Agg: 0.116) | — | Ridge stacking LGB+CAT, skip CAT H=10,25, percentile clip [p0.5,p99.5] |
-| 7 | 26/03 | LGB v6 (Hybrid — Calibration + Concat + FreqEnc) | 190 feats, 15 LGB seeds, no CAT, linear calibration, train+test concat, freq encoding | H1:0.064, H3:0.110, H10:0.226, H25:0.297 | — | Pure LGB 15-seed, ~4h runtime, details below |
+| 7 | 26/03 | LGB v6 (Hybrid — Calibration + Concat + FreqEnc) | 190 feats, 15 LGB seeds, no CAT, linear calibration, train+test concat, freq encoding | H1:0.064, H3:0.110, H10:0.226, H25:0.297 (Agg: 0.248) | 0.2462 | Pure LGB 15-seed, ~4h runtime, details below |
 
 ## Notes
 - Score range: 0 (worst) → 1 (best)
