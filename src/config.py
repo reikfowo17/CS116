@@ -14,11 +14,10 @@ else:
     OUTPUT_DIR = "submissions"
 
 # ── Constants ──
-SEED = 42
 HORIZONS = [1, 3, 10, 25]
-SKIP_CAT_HORIZONS = [10, 25]
 TARGET = "y_target"
 WEIGHT = "weight"
+VAL_THRESHOLD = 3500
 
 # ── Column Groups ──
 CAT_COLS   = ["code", "sub_code", "sub_category"]
@@ -26,25 +25,17 @@ META_COLS  = ["id", "code", "sub_code", "sub_category", "horizon", "ts_index"]
 GROUP_COLS = ["code", "sub_code", "sub_category", "horizon"]
 
 # ── Feature Engineering Config ──
-# Key features identified from competitor analysis
 KEY_FEATURES = ["feature_al", "feature_am", "feature_cg", "feature_by"]
-EXTRA_FEATURES = ["feature_s"]  # optional, check if exists
+EXTRA_FEATURES = ["feature_s"]
 LAG_STEPS = [1, 3, 5, 10, 25]
 ROLLING_WINDOWS = [5, 10, 20]
 
-# ── Cross-Validation ──
-N_CV_SPLITS = 5
+# ── Seeds ──
+N_SEEDS = 15
+SEEDS = [42, 2024, 12345, 99, 420, 777, 1337, 2025, 7, 11, 314, 617, 888, 999, 5555]
 
-# ── Seeds per CV fold ──
-CV_LGB_SEEDS = [42]
-CV_CAT_SEEDS = [42]
-
-FINAL_LGB_SEEDS = [42, 2024, 12345, 99, 420]
-FINAL_CAT_SEEDS = [42, 2024, 12345]
-
-
-# ── LightGBM Base Params ──
-LGBM_BASE_PARAMS = {
+# ── LightGBM Params ──
+LGB_PARAMS = {
     "objective":        "regression",
     "metric":           "rmse",
     "boosting_type":    "gbdt",
@@ -62,14 +53,3 @@ LGBM_BASE_PARAMS = {
     "verbosity":        -1,
     "n_jobs":           -1,
 }
-
-# ── CatBoost Base Params ──
-CATBOOST_PARAMS = {
-    "iterations":       1500,
-    "learning_rate":    0.03,
-    "depth":            7,
-    "l2_leaf_reg":      3.0,
-    "verbose":          0,
-    "early_stopping_rounds": 200,
-}
-

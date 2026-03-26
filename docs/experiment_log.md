@@ -9,13 +9,15 @@
 | 3 | 18/03 | LightGBM v3 (optimized) | + EWM + ratio + pctchg | H1:0.037, H3:0.058, H10:0.075, H25:0.157 | 0.1838 | lr=0.01, num_leaves=127 |
 | 4 | 19/03 | LightGBM v4 (20-seed + retrain-on-all) | Interactions + TargetEnc + CS-norm + Cyclical + Lag/Roll/EWM/Diff/Rank (~170 feats) | H1:0.080, H3:0.140, H10:0.222, H25:0.272 (Agg: 0.2353) | 0.2612 | 20 seeds, retrain-on-all, clipping, L1/L2 reg |
 | 5 | 20/03 | LightGBM v4.1 (+ feature selection) | Top 50-65 features per-horizon (importance-based) | H1:0.078, H3:0.139, H10:0.219, H25:0.275 (Agg: 0.2357) | 0.2566 ❌ | Feature selection giảm score so với v4 |
-| 6 | 21/03 | LGB+XGB v5 (blend) | Full ~170 feats, LGB 20-seed + XGB 10-seed | — | 0.2548 | Blend 85% LGB + 15% XGB, retrain-on-all cả hai |
-| 7 | 24/03 | LGB+CAT v6 (Ridge, 5-fold CV, Quant Hacks) | V5 feats + time_phase + lifecycle + momentum + roll_min/max (~150+ feats) | — | — | Details below |
+| 6 | 25/03 | LGB+CAT v5 (Ridge stacking, 5-fold CV) | V4 feats + time_phase + lifecycle + momentum + roll_min/max + target enc `code`, percentile clip (~150+ feats) | H1:0.047, H3:0.057, H10:0.107, H25:0.135 (Agg: 0.116) | — | Ridge stacking LGB+CAT, skip CAT H=10,25, percentile clip [p0.5,p99.5] |
+| 7 | 26/03 | LGB v6 (Hybrid — Calibration + Concat + FreqEnc) | 190 feats, 15 LGB seeds, no CAT, linear calibration, train+test concat, freq encoding | H1:0.064, H3:0.110, H10:0.226, H25:0.297 | — | Pure LGB 15-seed, ~4h runtime, details below |
 
 ## Notes
 - Score range: 0 (worst) → 1 (best)
 - Public LB uses 25% of test data
 - Private LB uses remaining 75%
+- **Host confirmed**: score > 0.5 = data leak, Private LB ≠ Public LB. "Clean" max ~0.35-0.40.
+- **Notebook prize requirement**: must run < 6 hours
 - v2 → v3 changes: giảm lr 0.05→0.01, tăng num_leaves 63→127, thêm EWM/ratio/pct_change features
 - v3 → v4 changes (học hỏi từ notebook top scorer 0.2359):
   - **20-seed ensemble**: Train 20 models ngẫu nhiên thay vì chỉ 1 hoặc 3
@@ -33,17 +35,22 @@
   - **Feature Selection**: Train 1 probe model → lấy feature_importance → giữ top 50-65 features
   - ❌ Kết quả: giảm score → đã revert (disable feature selection)
 - v4 → v5 changes:
-  - **XGBoost**: Thêm XGBoost (10 seeds, lr=0.015, max_depth=6) song song với LightGBM
-  - **Blend**: 85% LGB + 15% XGB weighted average
-  - **Retrain-on-all**: Áp dụng cho cả LGB và XGB
-  - Output hiển thị score riêng LGB, XGB và Blend
-- v5 → v6 changes:
-  - **CatBoost**: Thay XGBoost bằng CatBoost (ordered boosting, categoricals-friendly)
-  - **Ridge Stacking**: Thay fixed blend 85/15 bằng Ridge(alpha=1.0) học optimal weights từ OOF
+  - **CatBoost**: Thêm CatBoost (ordered boosting, categoricals-friendly) thay XGBoost
+  - **Ridge Stacking**: Ridge(alpha=1.0) học optimal weights LGB+CAT từ OOF
   - **5-Fold TimeSeriesSplit**: Thay validation 1 fold cuối bằng 5 nếp gấp thời gian
   - **Per-Fold Target Encoding**: Triệt tiêu target leakage
   - **New Features**: time_phase, lifecycle, momentum, roll_min/max
   - **Anti-leakage**: shift(1) trước rolling trên target-derived features
   - **LGBM Params**: num_leaves 90→127, L1 0.1→2.0, extra_trees, path_smooth
-  - **Post-Processing**: Neutralization + Hard Clip [-0.02, 0.02] + Shrinkage ×0.9
-  - **Performance**: DataFrame defragmentation, reduced seeds for faster runtime
+  - **Skip CatBoost** cho H=10, H=25 (score = 0 → vô ích nhưng tốn ~4h)
+  - **Thêm target encoding `code`**: Mỗi code tài sản có hành vi riêng
+  - **Post-Processing**: Percentile clip [p0.5, p99.5]
+- v5 → v6 changes:
+  - **Loại bỏ CatBoost hoàn toàn**: Pure LGB, dồn toàn bộ budget vào 15 seeds
+  - **Calibration**: Linear `a×pred + b` trên OOF (counter GBDT shrinkage)
+  - **Train+Test concat**: Concat trước khi build lags → test rows có lag từ cuối train
+  - **Frequency Encoding**: Thêm freq encoding cho code/sub_code/sub_category (rule-safe, no target)
+  - **Hold-out validation**: Thay 5-fold CV bằng simple split ts_index=3500 → nhanh hơn, dồn time cho retrain
+  - **15 LGB seeds**: Scale up từ 7 seeds → ổn định hơn
+  - **Estimated runtime**: ~4h (< 6h limit)
+  - **Kaggle Discussion insight**: Host xác nhận score > 0.5 là dùng data leak. Private LB sẽ neutralize. Sequential prediction bắt buộc.
