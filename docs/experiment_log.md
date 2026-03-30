@@ -11,6 +11,7 @@
 | 5 | 20/03 | LightGBM v4.1 (+ feature selection) | Top 50-65 features per-horizon (importance-based) | H1:0.078, H3:0.139, H10:0.219, H25:0.275 (Agg: 0.2357) | 0.2566 ❌ | Feature selection giảm score so với v4 |
 | 6 | 25/03 | LGB+CAT v5 (Ridge stacking, 5-fold CV) | V4 feats + time_phase + lifecycle + momentum + roll_min/max + target enc `code`, percentile clip (~150+ feats) | H1:0.047, H3:0.057, H10:0.107, H25:0.135 (Agg: 0.116) | — | Ridge stacking LGB+CAT, skip CAT H=10,25, percentile clip [p0.5,p99.5] |
 | 7 | 26/03 | LGB v6 (Hybrid — Calibration + Concat + FreqEnc) | 190 feats, 15 LGB seeds, no CAT, linear calibration, train+test concat, freq encoding | H1:0.064, H3:0.110, H10:0.226, H25:0.297 (Agg: 0.248) | 0.2462 | Pure LGB 15-seed, ~4h runtime, details below |
+| 8 | 30/03 | LGB v7 (Enhanced v4) — Pseudo-targets + Target Lags + Recency Weighting + Native Categoricals | ~170 feats, 15 seeds, per-horizon scale grid, feature pruning top-100, LGB native API + skill metric | H1:0.095, H3:0.175, H10:0.291, H25:0.355 (Agg: 0.298) | — | Merged v4 enhancements into src/ module; pseudo-target features (feature_al/am/cg/s shifted by optimal shifts per horizon); target lag features (y_lag1, y_lag3, y_diff1, y_expand_mean); linear recency weighting (factor=42); LGB native API with categorical_feature; per-horizon scale grid search; feature pruning top-100 by gain |
 
 ## Notes
 - Score range: 0 (worst) → 1 (best)
@@ -54,3 +55,13 @@
   - **15 LGB seeds**: Scale up từ 7 seeds → ổn định hơn
   - **Estimated runtime**: ~4h (< 6h limit)
   - **Kaggle Discussion insight**: Host xác nhận score > 0.5 là dùng data leak. Private LB sẽ neutralize. Sequential prediction bắt buộc.
+- v6 → v7 changes (Enhanced v4):
+  - **Pseudo-target features**: `feature_al/am/cg/s` shifted by `OPTIMAL_SHIFTS[horizon]` = giá trị từ h steps trước → causal signal mạnh nhất
+  - **Target lag features**: `y_lag1`, `y_lag3`, `y_diff1`, `y_expand_mean` (với shift(1) để tránh leakage)
+  - **Recency weighting**: Linear up-weighting recent observations với `RECENCY_FACTOR=42.0`
+  - **Native categorical handling**: Dùng LightGBM `categorical_feature` parameter
+  - **Per-horizon scale grid search**: Grid search scale factor tối ưu cho từng horizon
+  - **Feature pruning**: Giữ top-100 features theo gain importance
+  - **LGB Native API + Skill Metric**: Dùng `lgb.Dataset`, `lgb.train` với custom `feval=lgb_skill_metric`
+  - **Merged into src/ module**: Tất cả enhancements được apply vào `src/config.py`, `src/features.py`, `src/models.py`
+  - **15 seeds**: Giữ nguyên từ v6
