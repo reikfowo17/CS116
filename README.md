@@ -45,14 +45,13 @@ sys.path.append('/kaggle/working/repo/src')
 # Cell 2: Train & Predict
 from models import train_and_predict_all_horizons, create_submission
 
-sub_clip, sub_raw, scores = train_and_predict_all_horizons()
+sub, scores = train_and_predict_all_horizons()
 ```
 
 ### Bước 3: Xuất Submission
 ```python
 # Cell 3: Tạo file submission.csv
-create_submission(sub_clip, "submission.csv")
-sub_clip.to_csv("/kaggle/working/submission.csv", index=False)
+create_submission(sub, "submission.csv")
 ```
 
 ## Local Setup
