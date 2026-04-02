@@ -126,8 +126,28 @@ def solve_horizon(horizon):
     # ── Per-horizon scale grid search ──
     best_scale, val_score_scaled = find_best_scale(y_va.values, val_pred, w_va.values, SCALE_GRID)
     val_score_raw = weighted_rmse_score(y_va.values, val_pred, w_va.values)
-    print(f'Val WRMSE: {val_score_raw:.6f} (raw), {val_score_scaled:.6f} (scale={best_scale})')
+    print(f'Val WRMSE: {val_score_raw:.6f} (raw), {val_score_scaled:.6f} (global scale={best_scale})')
     print(f'best_iter={best_iter}')
+
+    # ── Per-code scale optimization ──
+    va_codes = all_feat.loc[va_mask, 'code'].values
+    code_scales = {}
+    for code_val in np.unique(va_codes):
+        cmask = va_codes == code_val
+        if cmask.sum() >= 30:
+            cs, _ = find_best_scale(y_va.values[cmask], val_pred[cmask], w_va.values[cmask], SCALE_GRID)
+            code_scales[code_val] = cs
+        else:
+            code_scales[code_val] = best_scale
+    # Val score with per-code scaling
+    val_pred_code = np.zeros_like(val_pred)
+    for code_val in np.unique(va_codes):
+        cmask = va_codes == code_val
+        val_pred_code[cmask] = val_pred[cmask] * code_scales[code_val]
+    val_score_percode = weighted_rmse_score(y_va.values, val_pred_code, w_va.values)
+    print(f'Per-code scales: {len(code_scales)} codes, '
+          f'range [{min(code_scales.values()):.2f}, {max(code_scales.values()):.2f}], '
+          f'val={val_score_percode:.6f}')
 
     # ── Feature pruning — keep top N by importance ──
     print('Feature pruning...')
@@ -183,12 +203,17 @@ def solve_horizon(horizon):
         del mdl, d_full, X_te
         gc.collect()
 
-    # ── Post-processing: per-horizon scale + clip ──
-    test_pred_scaled = test_pred * best_scale
+    # ── Post-processing: per-code scale + clip ──
+    test_codes = te_feat['code'].values
+    test_pred_scaled = np.zeros_like(test_pred)
+    for code_val in np.unique(test_codes):
+        cmask = test_codes == code_val
+        s = code_scales.get(code_val, best_scale)
+        test_pred_scaled[cmask] = test_pred[cmask] * s
     clip_lo = np.percentile(y_all, 0.5)
     clip_hi = np.percentile(y_all, 99.5)
     test_pred_final = np.clip(test_pred_scaled, clip_lo, clip_hi)
-    print(f'Scale: x{best_scale}, Clip: [{clip_lo:.2f}, {clip_hi:.2f}]')
+    print(f'Per-code scale: [{min(code_scales.values()):.2f}, {max(code_scales.values()):.2f}], Clip: [{clip_lo:.2f}, {clip_hi:.2f}]')
 
     elapsed = (time.time() - t0) / 60
     print(f'H{horizon} done in {elapsed:.1f} min')
@@ -202,7 +227,7 @@ def solve_horizon(horizon):
         'ids':           test_ids,
         'pred':          test_pred_final,
         'pred_raw':      test_pred,
-        'val_score':     val_score_scaled,
+        'val_score':     val_score_percode,
         'val_score_raw': val_score_raw,
         'best_scale':    best_scale,
         'val_y':         y_va.values,
